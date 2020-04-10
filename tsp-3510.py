@@ -34,6 +34,18 @@ euclidean_distance = np.rint(np.sqrt(np.square(x_diff) + np.square(y_diff)))  # 
 ################################################################################################
 
 
+# 0.1, 1, 50, 0.5 = 37497, 38540, 37330
+# 0.1, 1, 50, 0.2 = 32131, 30877, 32172
+# 0.3, 1, 50, 0.2 = 45929
+# 0.05, 1, 50, 0.2 = 27603, 28044, 29034
+# 0.05, 1, 50, 0.1 = 28115, 28115,
+population_size = 1000  # number of routes in each population iteration
+individual_mutation_rate = 0.05  # proportion of cities that are randomly changed in a route mutation
+population_mutation_rate = 1  # proportion of routes that mutate each iteration
+elite_size = 50  # size of population guaranteed to survive each iteration
+survival_rate = 0.1  # rate of survival for not elite population each iteration
+
+
 def generate_route():
     return random.sample(range(len(coordinates)), len(coordinates))
 
@@ -45,7 +57,7 @@ def get_route_length(route):
     return route_length
 
 
-def create_population(population_size):
+def create_population():
     return [(r, get_route_length(r)) for r in [generate_route() for i in range(population_size)]]
 
 
@@ -62,14 +74,47 @@ def breed(route_1, route_2):
     return child, get_route_length(child)
 
 
-def mutate(route, mutation_rate):
-    for i in range(len(route)):
-        if random.random() < mutation_rate:
-            victim = int(random.random() * len(route))
-            storage = route[victim]
-            route[victim] = route[i]
-            route[i] = storage
-    return route
+def breed_population(mating_pool, offspring_quantity):
+    children = []
+    for i in range(offspring_quantity):
+        a = int(random.random() * len(mating_pool))
+        b = int(random.random() * len(mating_pool))
+        children.append(breed(mating_pool[a], mating_pool[b]))
+    return children
+
+
+def mutate_individual(route):
+    for i in range(len(route[0])):
+        if random.random() < individual_mutation_rate:
+            victim = int(random.random() * len(route[0]))
+            storage = route[0][victim]
+            route[0][victim] = route[0][i]
+            route[0][i] = storage
+    return route[0], get_route_length(route[0])
+
+
+def mutate_population(population):
+    for i in range(len(population)):
+        if random.random() < population_mutation_rate:
+            population[i] = mutate_individual(population[i])
+    return population
+
+
+def select_pool(sorted_population):
+    pool = sorted_population[0: elite_size]
+    for i in range(elite_size, len(sorted_population)):
+        if random.random() < survival_rate:
+            pool.append(sorted_population[i])
+    return pool
+
+
+def create_new_generation(population):
+    ranked_population = sort_by_fitness(population)
+    mating_pool = select_pool(ranked_population)
+    children = breed_population(mating_pool, population_size - len(mating_pool))
+    children = mutate_population(children)
+    return mating_pool + children
+
 
 '''
 pop = create_population(10)
@@ -78,10 +123,12 @@ print(pop[0])
 print(pop[1])
 print(breed(pop[0], pop[1]))
 '''
-r = generate_route()
-print(r)
-r = mutate(r, 0.2)
-print(r)
+pop = create_population()
+for i in range(1000):
+    pop = create_new_generation(pop)
+    if i % 100 == 0:
+        print(sort_by_fitness(pop)[0])
+
 
 ################################################################################################
 # Output data to file
