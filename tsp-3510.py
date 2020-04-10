@@ -37,11 +37,25 @@ euclidean_distance = np.rint(np.sqrt(np.square(x_diff) + np.square(y_diff)))  # 
 def generate_route():
     return random.sample(range(len(coordinates)), len(coordinates))
 
-def get_route_length(route):
-    for i in route:
-        print(i)
 
-print(get_route_length(generate_route()))
+def get_route_length(route):
+    route_length = 0
+    for i in range(len(route)):
+        route_length += euclidean_distance[route[i]][route[(i + 1) % len(route)]]
+    return route_length
+
+
+def create_population(population_size):
+    return [(r, get_route_length(r)) for r in [generate_route() for i in range(population_size)]]
+
+
+def sort_by_fitness(population):
+    return sorted(population, key=lambda r: r[1])
+
+
+pop = create_population(10)
+pop = sort_by_fitness(pop)
+print(pop)
 
 ################################################################################################
 # Output data to file
