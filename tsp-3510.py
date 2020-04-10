@@ -53,9 +53,20 @@ def sort_by_fitness(population):
     return sorted(population, key=lambda r: r[1])
 
 
+def breed(route_1, route_2):
+    a = int(random.random() * len(route_1[0]))
+    b = int(random.random() * len(route_1[0]))
+    part1 = route_1[0][min(a, b): max(a, b)]
+    part2 = [city for city in route_2[0] if city not in part1]
+    child = part1 + part2
+    return child, get_route_length(child)
+
+
 pop = create_population(10)
 pop = sort_by_fitness(pop)
-print(pop)
+print(pop[0])
+print(pop[1])
+print(breed(pop[0], pop[1]))
 
 ################################################################################################
 # Output data to file
