@@ -62,11 +62,26 @@ def breed(route_1, route_2):
     return child, get_route_length(child)
 
 
+def mutate(route, mutation_rate):
+    for i in range(len(route)):
+        if random.random() < mutation_rate:
+            victim = int(random.random() * len(route))
+            storage = route[victim]
+            route[victim] = route[i]
+            route[i] = storage
+    return route
+
+'''
 pop = create_population(10)
 pop = sort_by_fitness(pop)
 print(pop[0])
 print(pop[1])
 print(breed(pop[0], pop[1]))
+'''
+r = generate_route()
+print(r)
+r = mutate(r, 0.2)
+print(r)
 
 ################################################################################################
 # Output data to file
