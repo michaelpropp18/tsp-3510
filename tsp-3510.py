@@ -1,3 +1,4 @@
+import random
 import sys
 import numpy as np
 
@@ -13,7 +14,6 @@ coordinates = np.loadtxt(input_file_name)  # loads data into coordinates
 
 # example: $ python3.7 tsp-3510.py mat-test.txt output.txt 5
 
-
 ################################################################################################
 # Compute Euclidean Distance Between All Points
 ################################################################################################
@@ -25,11 +25,23 @@ x_tiled = np.tile(x_coordinates, (length, 1))  # copy the top row for all rows
 y_tiled = np.tile(y_coordinates, (length, 1))  # copy the top row for all rows
 x_diff = x_tiled - x_tiled.T  # subtract every possible x coordinate from one another
 y_diff = y_tiled - y_tiled.T  # subtract every possible y coordinate from one another
-euclidean_distance = np.sqrt(np.square(x_diff) + np.square(y_diff))  # euclidean distance formula
+euclidean_distance = np.rint(np.sqrt(np.square(x_diff) + np.square(y_diff)))  # euclidean distance formula rounded to int
 
-print(euclidean_distance[3][1])  # gets the euclidean distance between point 4 and 2
+#print(euclidean_distance[6][1])  # gets the euclidean distance between point 4 and 2
+
+################################################################################################
+# Genetic Algorithm
+################################################################################################
 
 
+def generate_route():
+    return random.sample(range(len(coordinates)), len(coordinates))
+
+def get_route_length(route):
+    for i in route:
+        print(i)
+
+print(get_route_length(generate_route()))
 
 ################################################################################################
 # Output data to file
