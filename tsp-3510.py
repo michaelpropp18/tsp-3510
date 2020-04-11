@@ -1,6 +1,7 @@
 import random
 import sys
 import numpy as np
+import time
 
 ################################################################################################
 # Load Command Line Arguments and Data
@@ -8,7 +9,7 @@ import numpy as np
 
 input_file_name = sys.argv[1]  # inputfilename.txt
 output_file_name = sys.argv[2]  # outputfilename.txt
-time = sys.argv[3]  # a rational number greater than 0
+timeout = int(sys.argv[3])  # a rational number greater than 0
 
 coordinates = np.loadtxt(input_file_name)  # loads data into coordinates
 
@@ -30,21 +31,19 @@ euclidean_distance = np.rint(np.sqrt(np.square(x_diff) + np.square(y_diff)))  # 
 #print(euclidean_distance[6][1])  # gets the euclidean distance between point 4 and 2
 
 ################################################################################################
-# Genetic Algorithm
+# Genetic Algorithm Parameters
 ################################################################################################
 
+population_size = 100  # number of routes in each population iteration
+individual_mutation_rate = 0.2  # proportion of cities that are randomly changed in a route mutation
+population_mutation_rate = 0.3  # proportion of routes that mutate each iteration
+elite_size = 80  # size of population guaranteed to survive each iteration
+survival_rate = 0  # rate of survival for not elite population each iteration
 
-# 0.1, 1, 50, 0.5 = 37497, 38540, 37330
-# 0.1, 1, 50, 0.2 = 32131, 30877, 32172
-# 0.3, 1, 50, 0.2 = 45929
-# 0.05, 1, 50, 0.2 = 27603, 28044, 29034
-# 0.05, 1, 50, 0.1 = 28115, 28115,
-population_size = 1000  # number of routes in each population iteration
-individual_mutation_rate = 0.05  # proportion of cities that are randomly changed in a route mutation
-population_mutation_rate = 1  # proportion of routes that mutate each iteration
-elite_size = 50  # size of population guaranteed to survive each iteration
-survival_rate = 0.1  # rate of survival for not elite population each iteration
 
+################################################################################################
+# Genetic Algorithm Functions
+################################################################################################
 
 def generate_route():
     return random.sample(range(len(coordinates)), len(coordinates))
@@ -116,23 +115,58 @@ def create_new_generation(population):
     return mating_pool + children
 
 
-'''
-pop = create_population(10)
-pop = sort_by_fitness(pop)
-print(pop[0])
-print(pop[1])
-print(breed(pop[0], pop[1]))
-'''
-pop = create_population()
-for i in range(1000):
-    pop = create_new_generation(pop)
-    if i % 100 == 0:
-        print(sort_by_fitness(pop)[0])
-
-
 ################################################################################################
 # Output data to file
 ################################################################################################
 
-with open (output_file_name, 'w') as output_file:
-    output_file.write("Output goes here")
+def write_output(path):
+    my_output = str(path[1]) + '\n'
+    for node in path[0]:
+        my_output += str(node) + ' '
+    with open (output_file_name, 'w') as output_file:
+        output_file.write(my_output)
+
+
+################################################################################################
+# Run Genetic Algorithm
+################################################################################################
+
+print(time.time())
+pop = create_population()
+
+start_time = time.time()
+for i in range(10000):
+    pop = create_new_generation(pop)
+    if i % 100 == 0:
+        if time.time() - start_time > timeout:
+            write_output(sort_by_fitness(pop)[0])
+            print("timeout")
+            exit()
+        print(sort_by_fitness(pop)[0])
+
+
+################################################################################################
+# Testing Example Problem
+################################################################################################
+
+# [24, 19, 25, 27, 28, 22, 21, 20, 16, 17, 18, 14, 11, 10, 9, 5, 1, 0, 4, 7, 3, 2, 6, 8, 12, 13, 15, 23, 26]
+
+# 1000, 0.1, 1, 50, 0.5 = 37497, 38540, 37330
+# 1000, 0.1, 1, 50, 0.2 = 32131, 30877, 32172
+# 1000, 0.3, 1, 50, 0.2 = 45929
+# 1000, 0.05, 1, 50, 0.2 = 27603, 28044, 29034 # best so far
+# 1000, 0.05, 1, 50, 0.1 = 28115, 28115, #best
+# 1000, 0.3, 1, 50, 0.3 = 45619
+
+# 500, 0.05, 1, 50, 0.2 = 27750, 28871, 27750 quick
+# 100, 0.05, 1, 50, 0.2 = 28044, 27750, 28779 very quick
+# 100, 0.01, 1, 50, 0.2 = 27603, 27603, 28867, 28115
+# 100, 0.01, 1, 10, 0.2 = 28737, 28590, 28593
+# 100, 0.01, 1, 80, 0.2 = 28871, 27603, 28191, 27603
+
+# 500, 0.01, 1, 80, 0.2 = 28871, 27603, 28191
+# 100, 0.05, 1, 5, 0.1 = 30328.0
+
+# 100, 0.01, 1, 50, 0.2 = 34828, 36347, 35177
+# 100, 0.01, 1, 25, 0.3 = 36273, 33916, 35371
+# 100, 0.1, 0.3, 80, 0 = 34925
