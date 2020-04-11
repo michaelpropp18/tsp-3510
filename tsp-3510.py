@@ -131,7 +131,7 @@ def write_output(path):
 # Run Genetic Algorithm
 ################################################################################################
 
-print(time.time())
+print(time.time()) 
 pop = create_population()
 
 start_time = time.time()
