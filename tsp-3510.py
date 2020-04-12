@@ -34,21 +34,30 @@ euclidean_distance = np.rint(np.sqrt(np.square(x_diff) + np.square(y_diff)))  # 
 # Genetic Algorithm Parameters
 ################################################################################################
 
+# 100, 0.005, 1, 80, 0, 1000 # best for his data
+# 300, 0.001, 1, 280, 0, 2000 # best for test2 with 50 data points
+# 300, 0.001, 1, 280, 0, 2000 # best for test2 with 50 data points
+
 population_size = 100  # number of routes in each population iteration
-individual_mutation_rate = 0.2  # proportion of cities that are randomly changed in a route mutation
-population_mutation_rate = 0.3  # proportion of routes that mutate each iteration
+individual_mutation_rate = 0.005  # proportion of cities that are randomly changed in a route mutation
+population_mutation_rate = 1  # proportion of routes that mutate each iteration
 elite_size = 80  # size of population guaranteed to survive each iteration
-survival_rate = 0  # rate of survival for not elite population each iteration
+survival_rate = 0  # rate of survival for non elite population each iteration
+
+repetition_timeout = 1000  # starts new iteration after this many repetitions with same optimal path
+update_frequency = 10  # give an update every 20 seconds
 
 
 ################################################################################################
 # Genetic Algorithm Functions
 ################################################################################################
 
+# generates a random route
 def generate_route():
     return random.sample(range(len(coordinates)), len(coordinates))
 
 
+# calculates the length of a route
 def get_route_length(route):
     route_length = 0
     for i in range(len(route)):
@@ -56,14 +65,17 @@ def get_route_length(route):
     return route_length
 
 
-def create_population():
+# generates a list of random routes of length population_size
+def initialize_population():
     return [(r, get_route_length(r)) for r in [generate_route() for i in range(population_size)]]
 
 
+# orders the routes in the population by route length
 def sort_by_fitness(population):
     return sorted(population, key=lambda r: r[1])
 
 
+# merges two routes to produce a new route
 def breed(route_1, route_2):
     a = int(random.random() * len(route_1[0]))
     b = int(random.random() * len(route_1[0]))
@@ -73,6 +85,7 @@ def breed(route_1, route_2):
     return child, get_route_length(child)
 
 
+# randomly breeds the specified quantity of new paths using paths in the mating_pool
 def breed_population(mating_pool, offspring_quantity):
     children = []
     for i in range(offspring_quantity):
@@ -82,6 +95,7 @@ def breed_population(mating_pool, offspring_quantity):
     return children
 
 
+# randomly switches cities in a path
 def mutate_individual(route):
     for i in range(len(route[0])):
         if random.random() < individual_mutation_rate:
@@ -92,6 +106,7 @@ def mutate_individual(route):
     return route[0], get_route_length(route[0])
 
 
+# randomly mutates paths in a population
 def mutate_population(population):
     for i in range(len(population)):
         if random.random() < population_mutation_rate:
@@ -99,6 +114,7 @@ def mutate_population(population):
     return population
 
 
+# selects a pool from a sorted population
 def select_pool(sorted_population):
     pool = sorted_population[0: elite_size]
     for i in range(elite_size, len(sorted_population)):
@@ -107,6 +123,7 @@ def select_pool(sorted_population):
     return pool
 
 
+# creates a new generation based on the previous population
 def create_new_generation(population):
     ranked_population = sort_by_fitness(population)
     mating_pool = select_pool(ranked_population)
@@ -119,6 +136,7 @@ def create_new_generation(population):
 # Output data to file
 ################################################################################################
 
+# writes the selected path and cost to the file
 def write_output(path):
     my_output = str(path[1]) + '\n'
     for node in path[0]:
@@ -131,18 +149,53 @@ def write_output(path):
 # Run Genetic Algorithm
 ################################################################################################
 
-print(time.time()) 
-pop = create_population()
-
 start_time = time.time()
-for i in range(10000):
-    pop = create_new_generation(pop)
-    if i % 100 == 0:
+best_paths = []
+simulations = 0
+
+
+def single_simulation():
+    simulation_start_time = time.time()
+    last_update = simulation_start_time
+    generations = 0
+    best_path = None
+    pop = initialize_population()
+    while True:
+        pop = create_new_generation(pop)
+        generations += 1
+        if time.time() - last_update > update_frequency:
+            print('Progress update: still in simulation ' + str(simulations))
+            print('Generations in current simulation: ' + str(generations))
+            print('Best path length in current simulation: ', pop[0][1])
+            print('Current Simulation time elapsed: ' + str(int(time.time() - simulation_start_time)))
+            print('Overall time elapsed: ' + str(int(time.time() - start_time)) + '\n')
+            last_update = time.time()
         if time.time() - start_time > timeout:
-            write_output(sort_by_fitness(pop)[0])
-            print("timeout")
-            exit()
-        print(sort_by_fitness(pop)[0])
+            best_path = pop[0]
+            print('Simulation ' + str(simulations) + ' Timed Out')
+            print('Path found:', best_path)
+            return best_path
+        if generations % repetition_timeout == 0:
+            if best_path == pop[0]:
+                print('Simulation ' + str(simulations) + ' Complete')
+                print('Path found:', best_path)
+                return pop[0]
+            else:
+                best_path = pop[0]
+    print('Simulation ' + str(simulations) + ' Complete')
+    print('Path found:', best_path)
+    return best_path
+
+
+while True:
+    simulations += 1
+    best_paths.append(single_simulation())
+    best_paths = sort_by_fitness(best_paths)
+    print('Best known path:', best_paths[0], '\n\n')
+    if time.time() - start_time > timeout:
+        write_output(best_paths[0])
+        print("Timeout")
+        exit()
 
 
 ################################################################################################
