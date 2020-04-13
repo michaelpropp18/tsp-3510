@@ -193,6 +193,19 @@ while True:
     best_paths = sort_by_fitness(best_paths)
     print('Best known path:', best_paths[0], '\n\n')
     if time.time() - start_time > timeout:
+        '''
+        my_sum = 0
+        for i in best_paths:
+            my_sum += i[1]
+        avg = my_sum / len(best_paths)
+        print('Average', avg)
+        sd = 0
+        for i in best_paths:
+            sd += (avg - i[1])*(avg - i[1])
+        sd = sd / (len(best_paths) - 1)
+        sd = sd ** 0.5
+        print('Standard Deviation', sd)
+        '''
         write_output(best_paths[0])
         print("Timeout")
         exit()
