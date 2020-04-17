@@ -1,4 +1,6 @@
 Michael Propp and Willem Taylor
+mpropp6@gatech.edu and wtaylor67@gatech.edu
+4/17/2020
 
 Files Included:
 Name: 10_Simulations_Output.txt
